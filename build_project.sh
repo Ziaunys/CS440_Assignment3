@@ -16,6 +16,8 @@ mkdir imdb
 dot_java=`ls *.java`
 javac -classpath $CLASSPATH $dot_java
 
+echo $2 $3
+
 if [ "$1" == "test" ]
 then 
 	java -Xmx2048m -classpath $CLASSPATH Main 1
@@ -24,7 +26,7 @@ then
 #	java -Xmx2048m -classpath $CLASSPATH Main 4 2961
 #	java -classpath $CLASSPATH Main 5 2000 3000
 #	java -classpath $CLASSPATH Main 6 20000.xml 30000.xml 2000 3000
- 	java -Xmx2048m -classpath $CLASSPATH Main 7 $2
+ 	java -Xmx2048m -classpath $CLASSPATH Main 7 $2 $3
 	exit 0 
 fi
 #java -classpath $CLASSPATH Main $args 

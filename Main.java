@@ -111,6 +111,9 @@ public class Main {
            System.err.println("Caught Exception creating datatbase :");
            e.printStackTrace();
         }
+        for(String arg:text){
+            System.out.println("An arg " + arg);
+        }
 		ArrayList<XMLFile> foundEntries = new ArrayList<XMLFile>();
         Set<String> uniq = null;
         Set<String> searchTerms = new HashSet<String>(Arrays.asList(text));
@@ -316,8 +319,24 @@ public class Main {
                 break;
 
             case 7:
-                System.out.println("Performing query over text " + args[1]);
-                results = imdbPointQueryText(args[1]);
+                //System.out.println("Performing query over text " + args[1]);
+                switch(args.length) {
+                    case 2:
+                        results = imdbPointQueryText(args[1]);
+                        break;
+                    case 3:
+                        results = imdbPointQueryText(args[1], args[2]);
+                        break;
+                    case 4:
+                        results = imdbPointQueryText(args[1], args[2], args[3]);
+                        break;
+                    case 5:
+                        results = imdbPointQueryText(args[1], args[2], args[3], args[4]);
+                        break;
+                    case 6:
+                        results = imdbPointQueryText(args[1], args[2], args[3], args[4], args[5]);
+                        break;
+                }
                 for(XMLFile result:results) {
                     //System.out.println(result.getName());
                 }
