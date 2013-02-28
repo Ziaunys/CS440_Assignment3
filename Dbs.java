@@ -95,9 +95,15 @@ public class Dbs {
         return sizeDb;
     }
 
+    public SecondaryDatabase getTextDb() {
+        return textDb;
+    }
     public void close() {
 
         try {
+            if (textDb != null) {
+                textDb.close();
+            }
 			if (sizeDb != null) { 
 				sizeDb.close();
 			}	

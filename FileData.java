@@ -68,7 +68,6 @@ public class FileData {
         input = input.replaceAll("\\<.*?\\>", "");
         Set<String> uniqWords = new HashSet<String>();
         for(String token:input.split("\\s+")) {
-			System.out.println(token);
             if(!stopWords.contains(token.toLowerCase())) {
                 uniqWords.add(token.toLowerCase());
             }

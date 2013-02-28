@@ -3,8 +3,10 @@ import java.nio.ByteBuffer;
 import java.lang.Long;
 import java.lang.String;
 import java.lang.Integer;
+import java.util.Arrays;
 import java.util.ArrayList;
-
+import java.util.Set;
+import java.util.HashSet;
 
 import com.sleepycat.db.Cursor;
 import com.sleepycat.db.DatabaseException;
@@ -33,7 +35,7 @@ public class Main {
 
     public static void populateDB() {
         int ikey = 0;
-        File rootPath = new File("/home/zounese/imdb");
+        File rootPath = new File("/nfs/stak/students/f/fridgei/CS440_Assignment3/testdata");
         ArrayList<File> paths = new ArrayList<File>();
         paths = FileData.walkPath(rootPath);
         try {
@@ -46,6 +48,7 @@ public class Main {
         DatabaseEntry data = null;
         try {
             for(File path:paths) {
+                System.out.println("ok");
                 xml = new XMLFile(path);
 				ikey = Integer.parseInt(xml.getName().replaceAll(".xml", ""));	
                 key = new DatabaseEntry();
@@ -100,26 +103,33 @@ public class Main {
     }
 
 
-    public static XMLFile imdbPointQueryText(String text) {
+    public static ArrayList<XMLFile> imdbPointQueryText(String ... text) {
         try {
             dbs.setup(dbName);
         } catch (DatabaseException e){
            System.err.println("Caught Exception creating datatbase :");
            e.printStackTrace();
         }
+		ArrayList<XMLFile> foundEntries = new ArrayList<XMLFile>();
+        Set<String> uniq = null;
+        Set<String> searchTerms = new HashSet<String>(Arrays.asList(text));
         XMLFileBinding binding = new XMLFileBinding();
         try {
-            secCursor = dbs.getSecDb().openSecondaryCursor(null, null);
+            secCursor = dbs.getTextDb().openSecondaryCursor(null, null);
             XMLFile foundEntry = null;
             DatabaseEntry foundKey = new DatabaseEntry();
             DatabaseEntry foundData = new DatabaseEntry();
-            DatabaseEntry sizeKey = new DatabaseEntry(text.getBytes());
-            ret =  secCursor.getSearchKey(sizeKey, foundData, LockMode.DEFAULT);
-			if(ret == OperationStatus.SUCCESS) {
-            	xml = (XMLFile) binding.entryToObject(foundData);
-			} else {
-				xml = null;
-			}
+            DatabaseEntry textKey = new DatabaseEntry(text[0].getBytes());
+            ret =  secCursor.getSearchKey(textKey, foundKey, foundData, LockMode.DEFAULT);
+            while (ret == OperationStatus.SUCCESS) {
+                xml = (XMLFile) binding.entryToObject(foundData);
+                uniq = FileData.uniqTerms(xml.getContent());
+                if(uniq.containsAll(searchTerms)) {
+                    foundEntries.add(xml);
+                }
+                else if(!uniq.contains(text[0])) break;
+                ret = secCursor.getNext(textKey, foundKey, foundData, LockMode.DEFAULT);
+            }
         } catch (DatabaseException e) {
             System.err.println("Database Error: " + e.toString());
             e.printStackTrace();
@@ -129,7 +139,7 @@ public class Main {
 		} finally {
     		dbs.close();
         }
-        return xml;
+        return foundEntries;
     }
 
     public static XMLFile imdbPointQuery(String fileName) {
@@ -297,11 +307,16 @@ public class Main {
                 for(XMLFile result:results) {
                     System.out.println(result);
                 }
+                break;
 
             case 7:
                 System.out.println("Performing query over text " + args[1]);
-                ret = imdbPointQueryText(args[1]);
-                System.out.println(ret);
+                results = imdbPointQueryText(args[1]);
+                for(XMLFile result:results) {
+                    System.out.println(result.getName());
+                }
+                System.out.println(results.size());
+                break;
             default:
                 System.out.println("Invalid query ty.");
         }
