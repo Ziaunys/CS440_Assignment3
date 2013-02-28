@@ -26,6 +26,7 @@ public class TextIndexKeyCreator implements SecondaryMultiKeyCreator {
         Iterator it = textKeys.iterator();
         while(it.hasNext()) {
             word = (String) it.next();
+            System.out.println("Adding word: " + word);
             key = new DatabaseEntry(word.getBytes());
             results.add(key);
         }

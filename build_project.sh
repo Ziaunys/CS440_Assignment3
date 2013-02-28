@@ -5,6 +5,8 @@ then
 	rm query.out.txt
 	rm -rf *.class 
 	echo "Removing *.class files. . ." 
+	rm -rf imdb/*
+    echo "Removing imdb/*"
 	exit 0
 fi
 
@@ -22,7 +24,7 @@ then
 #	java -Xmx2048m -classpath $CLASSPATH Main 4 2961
 #	java -classpath $CLASSPATH Main 5 2000 3000
 #	java -classpath $CLASSPATH Main 6 20000.xml 30000.xml 2000 3000
-#	java -Xmx2048m -classpath $CLASSPATH Main 7 national
+ 	java -Xmx2048m -classpath $CLASSPATH Main 7 $2
 	exit 0 
 fi
 #java -classpath $CLASSPATH Main $args 

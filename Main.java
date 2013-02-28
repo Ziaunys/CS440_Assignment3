@@ -15,6 +15,7 @@ import com.sleepycat.db.LockMode;
 import com.sleepycat.db.OperationStatus;
 import com.sleepycat.db.SecondaryCursor;
 import com.sleepycat.bind.tuple.IntegerBinding;
+import com.sleepycat.bind.tuple.StringBinding;
 
 public class Main {
     public static String dbName = "imdb";
@@ -35,7 +36,7 @@ public class Main {
 
     public static void populateDB() {
         int ikey = 0;
-        File rootPath = new File("/nfs/stak/students/f/fridgei/CS440_Assignment3/testdata");
+        File rootPath = new File("/nfs/stak/students/u/uberj/cs440/CS440_Assignment3/testdata");
         ArrayList<File> paths = new ArrayList<File>();
         paths = FileData.walkPath(rootPath);
         try {
@@ -116,19 +117,24 @@ public class Main {
         XMLFileBinding binding = new XMLFileBinding();
         try {
             secCursor = dbs.getTextDb().openSecondaryCursor(null, null);
-            XMLFile foundEntry = null;
             DatabaseEntry foundKey = new DatabaseEntry();
             DatabaseEntry foundData = new DatabaseEntry();
             DatabaseEntry textKey = new DatabaseEntry(text[0].getBytes());
-            ret =  secCursor.getSearchKey(textKey, foundKey, foundData, LockMode.DEFAULT);
+            ret = secCursor.getSearchKey(textKey, foundKey, foundData, LockMode.DEFAULT);
+            DatabaseEntry correctKey = null;
+            Set<DatabaseEntry> keysSeen = new HashSet<DatabaseEntry>();
+
             while (ret == OperationStatus.SUCCESS) {
+                keysSeen.add(foundKey);
                 xml = (XMLFile) binding.entryToObject(foundData);
                 uniq = FileData.uniqTerms(xml.getContent());
                 if(uniq.containsAll(searchTerms)) {
                     foundEntries.add(xml);
                 }
-                else if(!uniq.contains(text[0])) break;
                 ret = secCursor.getNext(textKey, foundKey, foundData, LockMode.DEFAULT);
+                if (keysSeen.contains(foundKey)) {
+                    break;
+                }
             }
         } catch (DatabaseException e) {
             System.err.println("Database Error: " + e.toString());
@@ -313,7 +319,7 @@ public class Main {
                 System.out.println("Performing query over text " + args[1]);
                 results = imdbPointQueryText(args[1]);
                 for(XMLFile result:results) {
-                    System.out.println(result.getName());
+                    //System.out.println(result.getName());
                 }
                 System.out.println(results.size());
                 break;
