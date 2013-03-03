@@ -46,7 +46,7 @@ public class FileData {
         "whenever", "where", "whereafter", "whereas", "whereby", "wherein", "whereupon", "wherever",
         "whether", "which", "while", "whither", "who", "whoever", "whole", "whom", "whose", "why",
         "will", "with", "within", "without", "would", "yet", "you", "your", "yours", "yourself",
-        "yourselves", "the");
+        "yourselves", "the", "http", "com", "imdb");
 
 	public static String getFileData(File f) {
 		String line = null;
@@ -67,7 +67,17 @@ public class FileData {
     public static Set<String> uniqTerms(String input) {
         input = input.replaceAll("\\<.*?\\>", "");
         Set<String> uniqWords = new HashSet<String>();
-        for(String token:input.split("\\s+")) {
+        for(String token:input.split("[ .,()<>\"\\?{}/#&\';/:]")) {
+            if(!stopWords.contains(token.toLowerCase())) {
+                uniqWords.add(token.toLowerCase());
+            }
+        }
+        return uniqWords;
+    }
+
+    public static Set<String> uniqTerms(String[] input) {
+        Set<String> uniqWords = new HashSet<String>();
+        for(String token:input) {
             if(!stopWords.contains(token.toLowerCase())) {
                 uniqWords.add(token.toLowerCase());
             }
