@@ -287,82 +287,28 @@ public class Main {
 				break;
 			case 'q':
 				System.out.println("Performing query.");
+                dbName = args[1];
 				try {
-					BufferedReader br = new BufferedReader(new FileReader(args[2]));
+                    File outFile = new File("Eric_Zounese_Assignment3");
+                    if (!outFile.exists()) {
+                        outFile.createNewFile();
+                    }
 					String line;
-						while((line = br.readLine()) != null) {
-							System.out.println(line);
-						}
-						break;
-					} catch(IOException ioe) {
-						System.out.println("Caught file exception.");
-					}
-				}
+					BufferedReader br = new BufferedReader(new FileReader(args[2]));
+                    FileWriter fw = new FileWriter(outFile.getAbsoluteFile());
+                    BufferedWriter bw = new BufferedWriter(fw);
+					while((line = br.readLine()) != null) {
 
-/*
-        switch(Integer.parseInt(args[0])) {
-            case 1:
-                System.out.println("Populating database with XML files. . .");
-                populateDB();
-                break;
-            case 2:
-                System.out.println("Performing point query on file " + args[1]);
-                ret = imdbPointQuery(args[1]);
-                System.out.println(ret);
-                break;
-            case 3:
-                System.out.println("Performing range query over files fom " + args[1] + " - " + args[2]);
-                results = imdbRangeQuery(args[1], args[2]);
-                for(XMLFile result:results) {
-                    System.out.println(result);
+                        results = imdbPointQueryText(line.split(" "));
+                        for(XMLFile result:results) {
+                            bw.write(result.getName() + ";");
+                            System.out.println(result.getName());
+                        }
+                    }
+                    bw.close();
+                } catch(IOException ioe) {
+                    System.out.println("Caught file exception.");
                 }
-                break;
-            case 4:
-                System.out.println("Performing point query on file size " + args[1]);	
-                ret = imdbPointQuery(Integer.parseInt(args[1]));
-                System.out.println(ret);
-                break;
-            case 5:
-                System.out.println("Performing range query over file size from " + args[1] + " - " + args[2]);
-                results = imdbRangeQuery(Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-                for(XMLFile result:results) {
-                    System.out.println(result);
-                }
-                break;
-            case 6:
-                System.out.println("Performing range query over file name and size from files " + args[1] + " - " + args[2] + " and size " + args[3] + " - "  + args[4]);
-                results = imdbRangeQuery(args[1], args[2], Integer.parseInt(args[3]), Integer.parseInt(args[4]));
-                for(XMLFile result:results) {
-                    System.out.println(result);
-                }
-                break;
-
-            case 7:
-                //System.out.println("Performing query over text " + args[1]);
-                switch(args.length) {
-                    case 2:
-                        results = imdbPointQueryText(args[1]);
-                        break;
-                    case 3:
-                        results = imdbPointQueryText(args[1], args[2]);
-                        break;
-                    case 4:
-                        results = imdbPointQueryText(args[1], args[2], args[3]);
-                        break;
-                    case 5:
-                        results = imdbPointQueryText(args[1], args[2], args[3], args[4]);
-                        break;
-                    case 6:
-                        results = imdbPointQueryText(args[1], args[2], args[3], args[4], args[5]);
-                        break;
-                }
-                for(XMLFile result:results) {
-                    //System.out.println(result.getName());
-                }
-                System.out.println(results.size());
-                break;
-            default:
-                System.out.println("Invalid query ty.");
-        } */
+        }
     }
 }
