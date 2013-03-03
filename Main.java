@@ -34,9 +34,9 @@ public class Main {
     }
 
 
-    public static void populateDB() {
+    public static void populateDB(String location) {
         int ikey = 0;
-        File rootPath = new File("/nfs/stak/students/u/uberj/cs440/CS440_Assignment3/testdata");
+        File rootPath = new File(location);
         ArrayList<File> paths = new ArrayList<File>();
         paths = FileData.walkPath(rootPath);
         try {
@@ -280,8 +280,27 @@ public class Main {
         ArrayList<XMLFile> results =  null;
         XMLFile ret = null;
 
-        switch(Integer.parseInt(args[0])) {
+		switch(args[0].charAt(0)) {
+			case 'i':
+				System.out.println("Populating database.");
+				populateDB(args[1]);
+				break;
+			case 'q':
+				System.out.println("Performing query.");
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(args[2]));
+					String line;
+						while((line = br.readLine()) != null) {
+							System.out.println(line);
+						}
+						break;
+					} catch(IOException ioe) {
+						System.out.println("Caught file exception.");
+					}
+				}
 
+/*
+        switch(Integer.parseInt(args[0])) {
             case 1:
                 System.out.println("Populating database with XML files. . .");
                 populateDB();
@@ -344,6 +363,6 @@ public class Main {
                 break;
             default:
                 System.out.println("Invalid query ty.");
-        }
+        } */
     }
 }
