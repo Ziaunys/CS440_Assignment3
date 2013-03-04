@@ -17,6 +17,51 @@ import com.sleepycat.db.SecondaryCursor;
 import com.sleepycat.bind.tuple.IntegerBinding;
 import com.sleepycat.bind.tuple.StringBinding;
 
+
+class InsertionThread extends Thread {
+
+    Dbs dbs;
+    int startIdx;
+    int endIdx;
+    public InsertionThread() {}
+    public ArrayList<File> paths;
+    public XMLFileBinding binding;
+
+    public InsertionThread(Dbs dbs1, XMLFileBinding binding1, ArrayList<File> paths1,  int start, int end) {
+        this.dbs = dbs1;
+        this.binding = binding1;
+        this.startIdx = start;
+        this.endIdx = end;
+        this.paths = paths1;
+        System.out.println("Start: " + start + " End: " + end);
+    }
+
+    public void run() {
+        int ikey = 0;
+        File path;
+        XMLFile xml;
+        DatabaseEntry key = new DatabaseEntry();
+        DatabaseEntry data = new DatabaseEntry();
+        try {
+            for(int i = this.startIdx; i <= this.endIdx; i++) {
+                path = this.paths.get(i);
+                xml = new XMLFile(path);
+				ikey = Integer.parseInt(xml.getName().replaceAll(".xml", ""));
+				IntegerBinding.intToEntry(ikey, key);
+                binding.objectToEntry(xml, data);
+                this.dbs.getDb().put(null, key, data);
+            }
+        } catch (DatabaseException e) {
+            System.err.println("Caught DatabaseException during creation: ");
+            e.printStackTrace();
+        } catch (NullPointerException npe) {
+            System.err.println("Null pointer exception during insertion");
+            npe.printStackTrace();
+        }
+    }
+}
+
+
 public class Main {
     public static String dbName = "imdb";
     public static XMLFileBinding binding = new XMLFileBinding();
@@ -25,19 +70,11 @@ public class Main {
     public static XMLFile xml;
     public static Cursor cursor;
     public static SecondaryCursor secCursor;
+    public static ArrayList<File> paths;
+    public static ArrayList<InsertionThread> pool;
 
-
-    public static String padString(String input) {
-        input = input.replaceAll(".xml", "");
-        input = String.format("%10s", input).replace(" ", "0");
-        return input;
-    }
-
-
-    public static void populateDB(String location) {
-        int ikey = 0;
+    public static void populateDB(String location, int totalThreads) {
         File rootPath = new File(location);
-        ArrayList<File> paths = new ArrayList<File>();
         paths = FileData.walkPath(rootPath);
         try {
             dbs.setup(dbName);
@@ -45,28 +82,27 @@ public class Main {
             System.err.println("Caught Exception creating datatbase :");
             e.printStackTrace();
         }
-        DatabaseEntry key = null;
-        DatabaseEntry data = null;
+        int pathCount = paths.size();
+        int interval = pathCount / totalThreads;
+        InsertionThread[] threadPool = new InsertionThread[totalThreads];
         try {
-            for(File path:paths) {
-                System.out.println("ok");
-                xml = new XMLFile(path);
-				ikey = Integer.parseInt(xml.getName().replaceAll(".xml", ""));	
-                key = new DatabaseEntry();
-				IntegerBinding.intToEntry(ikey, key);
-                data = new DatabaseEntry();
-                binding.objectToEntry(xml, data);
-                dbs.getDb().put(null, key, data);
+            for(int i = 0; i < totalThreads - 1; i ++) {
+                threadPool[i] = new InsertionThread(dbs, binding, paths, i * interval, (i + 1) * interval - 1);
             }
-        } catch (DatabaseException e) {
-            System.err.println("Caught DatabaseException during creation: ");
-            e.printStackTrace();
-        } catch (NullPointerException npe) {
+            threadPool[totalThreads - 1] = new InsertionThread(dbs, binding, paths, (totalThreads - 1) * interval, pathCount - 1);
+            for(InsertionThread thread:threadPool){
+                thread.start();
+            }
+            for(InsertionThread thread:threadPool){
+                thread.join();
+            }
+        /*} catch (NullPointerException npe) {
             System.err.println("Null pointer exception during insertion");
-            npe.printStackTrace();
-        } finally {
-		    dbs.close();
+            npe.printStackTrace(); */
+        } catch(InterruptedException e) {
+            System.err.println("Threads interrupted");
         }
+        dbs.close();
     }
 
 
@@ -111,18 +147,16 @@ public class Main {
            System.err.println("Caught Exception creating datatbase :");
            e.printStackTrace();
         }
-        for(String arg:text){
-            System.out.println("An arg " + arg);
-        }
 		ArrayList<XMLFile> foundEntries = new ArrayList<XMLFile>();
         Set<String> uniq = null;
-        Set<String> searchTerms = new HashSet<String>(Arrays.asList(text));
+        Set<String> searchTerms = new HashSet<String>(FileData.uniqTerms(text));
+        ArrayList<String> searchArr = new ArrayList<String>(searchTerms);
         XMLFileBinding binding = new XMLFileBinding();
         try {
             secCursor = dbs.getTextDb().openSecondaryCursor(null, null);
             DatabaseEntry foundKey = new DatabaseEntry();
             DatabaseEntry foundData = new DatabaseEntry();
-            DatabaseEntry textKey = new DatabaseEntry(text[0].getBytes());
+            DatabaseEntry textKey = new DatabaseEntry(searchArr.get(0).getBytes());
             ret = secCursor.getSearchKey(textKey, foundKey, foundData, LockMode.DEFAULT);
             DatabaseEntry correctKey = null;
             Set<DatabaseEntry> keysSeen = new HashSet<DatabaseEntry>();
@@ -135,7 +169,7 @@ public class Main {
                     foundEntries.add(xml);
                 }
                 ret = secCursor.getNext(textKey, foundKey, foundData, LockMode.DEFAULT);
-                if (keysSeen.contains(foundKey)) {
+                if (keysSeen.contains(foundKey) || !uniq.contains(searchArr.get(0))) {
                     break;
                 }
             }
@@ -155,10 +189,10 @@ public class Main {
         XMLFile foundEntry = null;
         try {
             dbs.setup(dbName);
-       } catch (DatabaseException e) {
-           System.err.println("Caught Exception creating datatbase :");
-           e.printStackTrace();
-       }
+        } catch (DatabaseException e) {
+            System.err.println("Caught Exception creating datatbase :");
+            e.printStackTrace();
+        }
         XMLFileBinding binding = new XMLFileBinding();
         try {
             DatabaseEntry foundData = new DatabaseEntry();
@@ -283,7 +317,7 @@ public class Main {
 		switch(args[0].charAt(0)) {
 			case 'i':
 				System.out.println("Populating database.");
-				populateDB(args[1]);
+				populateDB(args[1], 8);
 				break;
 			case 'q':
 				System.out.println("Performing query.");
@@ -298,12 +332,17 @@ public class Main {
                     FileWriter fw = new FileWriter(outFile.getAbsoluteFile());
                     BufferedWriter bw = new BufferedWriter(fw);
 					while((line = br.readLine()) != null) {
-
+                        bw.write("Query with the following terms ");
+                        for(String token:line.split(" ")){
+                            bw.write(token + " ");
+                        }
+                        bw.write("\n");
                         results = imdbPointQueryText(line.split(" "));
                         for(XMLFile result:results) {
                             bw.write(result.getName() + ";");
                             System.out.println(result.getName());
                         }
+                        bw.write("\n");
                     }
                     bw.close();
                 } catch(IOException ioe) {

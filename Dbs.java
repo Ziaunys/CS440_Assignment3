@@ -35,7 +35,7 @@ public class Dbs {
         dbConfig.setType(DatabaseType.BTREE);
         dbConfig.setAllowCreate(true);
         dbConfig.setTransactional(false);
-        dbConfig.setCacheSize(10000);
+        dbConfig.setCacheSize(1000000);
 		dbConfig.setBtreeComparator(indexCmp);
 
         secDbConfig.setErrorStream(System.err);
@@ -46,7 +46,7 @@ public class Dbs {
         secDbConfig.setAllowPopulate(true); 
         secDbConfig.setAllowCreate(true);
         secDbConfig.setTransactional(false);
-        secDbConfig.setCacheSize(10000);
+        secDbConfig.setCacheSize(1000000);
 		secDbConfig.setBtreeComparator(indexCmp);
 
         textDbConfig.setErrorStream(System.err);
@@ -57,13 +57,12 @@ public class Dbs {
         textDbConfig.setAllowPopulate(true); 
         textDbConfig.setAllowCreate(true);
         textDbConfig.setTransactional(false);
-        textDbConfig.setCacheSize(10000);
+        textDbConfig.setCacheSize(1000000);
 
 
         try {
-            imdbName = dbNames + "/" + imdbName;
             System.out.println("Database at: " + imdbName);
-            imdb = new Database(imdbName, null, dbConfig);
+            imdb = new Database(dbNames + "/" + imdbName, null, dbConfig);
         } catch(FileNotFoundException notFound) {
             System.err.println(" HI Databases: " + notFound.toString());
             notFound.printStackTrace();
@@ -71,16 +70,14 @@ public class Dbs {
         }
 
         try {
-            secName = dbNames + "/" + secName;
-            sizeDb = new SecondaryDatabase(secName, secName, imdb, secDbConfig);
+            sizeDb = new SecondaryDatabase(dbNames + "/" + secName, secName, imdb, secDbConfig);
         } catch(FileNotFoundException e) {
             System.err.println(" Error in Secondary creation : " + e.toString());
             e.printStackTrace();
         }
 
 		try {
-			textName = dbNames + "/" + textName;
-			textDb = new SecondaryDatabase(textName, textName, imdb, textDbConfig);
+			textDb = new SecondaryDatabase(dbNames + "/" + textName, textName, imdb, textDbConfig);
 		} catch(FileNotFoundException e) {
 			System.err.println("Error in TextDB creation :" + e.toString());
 			e.printStackTrace();

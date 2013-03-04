@@ -65,11 +65,11 @@ public class FileData {
 	}
 
     public static Set<String> uniqTerms(String input) {
-        input = input.replaceAll("\\<.*?\\>", "");
+        input = input.replaceAll("\\<.*?\\>", "").toLowerCase();
         Set<String> uniqWords = new HashSet<String>();
         for(String token:input.split("[ .,()<>\"\\?{}/#&\';/:]")) {
-            if(!stopWords.contains(token.toLowerCase())) {
-                uniqWords.add(token.toLowerCase());
+            if(!stopWords.contains(token)) {
+                uniqWords.add(token);
             }
         }
         return uniqWords;
@@ -78,8 +78,9 @@ public class FileData {
     public static Set<String> uniqTerms(String[] input) {
         Set<String> uniqWords = new HashSet<String>();
         for(String token:input) {
-            if(!stopWords.contains(token.toLowerCase())) {
-                uniqWords.add(token.toLowerCase());
+            token = token.toLowerCase();
+            if(!stopWords.contains(token)) {
+                uniqWords.add(token);
             }
         }
         return uniqWords;

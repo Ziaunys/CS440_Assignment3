@@ -26,8 +26,8 @@ then
 #	java -Xmx2048m -classpath $CLASSPATH Main 4 2961
 #	java -classpath $CLASSPATH Main 5 2000 3000
 #	java -classpath $CLASSPATH Main 6 20000.xml 30000.xml 2000 3000
- 	java -Xmx2048m -classpath $CLASSPATH Main i testdata
- 	java -Xmx2048m -classpath $CLASSPATH Main q imdb query 
+ 	java -Xmx2048m -classpath $CLASSPATH Main i /scratch/cs440/imdb/590
+    java -Xmx2048m -classpath $CLASSPATH Main q imdb query
 	exit 0 
 fi
 #java -classpath $CLASSPATH Main $args 
